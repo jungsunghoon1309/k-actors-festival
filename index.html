@@ -502,6 +502,29 @@
     </div>
   </section>
 
+  <!-- ===== 댓글 ===== -->
+  <section class="section comments" id="comments">
+    <div class="container">
+      <div class="section-head reveal">
+        <p class="section-tag">COMMENTS</p>
+        <h2 class="section-title">응원 <em>댓글</em></h2>
+        <p class="section-desc">페스티벌을 기대하는 여러분의 메시지를 남겨주세요.</p>
+      </div>
+
+      <form class="comment-form reveal" id="commentForm">
+        <div class="comment-form-row">
+          <input type="text" id="commentNick" maxlength="20" placeholder="닉네임 (최대 20자)" required aria-label="닉네임" />
+          <button type="submit" class="btn btn-primary" id="commentSubmit">댓글 등록</button>
+        </div>
+        <textarea id="commentMsg" maxlength="500" rows="3" placeholder="응원 메시지를 입력하세요 (최대 500자)" required aria-label="댓글 내용"></textarea>
+        <p class="comment-msg" id="commentStatus"></p>
+      </form>
+
+      <ul class="comment-list" id="commentList" aria-live="polite"></ul>
+      <p class="ticket-notice reveal">※ 댓글은 익명으로 저장되며 부적절한 내용은 관리자에 의해 삭제될 수 있습니다.</p>
+    </div>
+  </section>
+
   <!-- ===== 푸터 ===== -->
   <footer class="footer">
     <div class="container footer-inner">

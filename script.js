@@ -235,4 +235,133 @@
     );
     sections.forEach(function (s) { sectionIO.observe(s); });
   }
+
+  /* =====================================================
+     댓글 (Express 백엔드 API)
+  ===================================================== */
+  var API_BASE = (function () {
+    if (window.location.protocol.indexOf("http") !== 0) return "https://k-actors-api.onrender.com";
+    if (window.location.hostname.indexOf("github.io") !== -1) return "https://k-actors-api.onrender.com";
+    return "";
+  })();
+
+  var commentForm = document.getElementById("commentForm");
+  var commentNick = document.getElementById("commentNick");
+  var commentMsg = document.getElementById("commentMsg");
+  var commentList = document.getElementById("commentList");
+  var commentStatus = document.getElementById("commentStatus");
+  var commentSubmit = document.getElementById("commentSubmit");
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function timeAgo(iso) {
+    var diff = Date.now() - new Date(iso).getTime();
+    var min = Math.floor(diff / 60000);
+    if (min < 1) return "방금 전";
+    if (min < 60) return min + "분 전";
+    var hr = Math.floor(min / 60);
+    if (hr < 24) return hr + "시간 전";
+    var day = Math.floor(hr / 24);
+    if (day < 7) return day + "일 전";
+    var d = new Date(iso);
+    return d.getFullYear() + "." + (d.getMonth() + 1) + "." + d.getDate();
+  }
+
+  function setStatus(text, isError) {
+    commentStatus.textContent = text || "";
+    commentStatus.classList.toggle("error", !!isError);
+  }
+
+  function renderComments(rows) {
+    if (!rows.length) {
+      commentList.innerHTML =
+        '<li class="comment-empty">아직 댓글이 없습니다. 첫 응원 메시지를 남겨보세요! ✨</li>';
+      return;
+    }
+    commentList.innerHTML = rows
+      .map(function (row) {
+        var nick = escapeHtml(row.nickname);
+        var ch = row.nickname.trim().charAt(0).toUpperCase() || "?";
+        return (
+          '<li class="comment-item">' +
+          '<div class="comment-avatar">' + escapeHtml(ch) + "</div>" +
+          '<div class="comment-body">' +
+          '<div class="comment-head">' +
+          '<span class="comment-nick">' + nick + "</span>" +
+          '<span class="comment-time">' + timeAgo(row.created_at) + "</span>" +
+          "</div>" +
+          '<p class="comment-text">' + escapeHtml(row.message) + "</p>" +
+          "</div></li>"
+        );
+      })
+      .join("");
+  }
+
+  function loadComments() {
+    commentList.innerHTML =
+      '<li class="comment-loading">댓글을 불러오는 중...</li>';
+
+    fetch(API_BASE + "/api/comments")
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (!data.ok) {
+          commentList.innerHTML =
+            '<li class="comment-empty">댓글 로딩 실패: ' +
+            escapeHtml(data.error || "알 수 없는 오류") + "</li>";
+          return;
+        }
+        renderComments(data.comments || []);
+      })
+      .catch(function (err) {
+        commentList.innerHTML =
+          '<li class="comment-empty">서버에 연결할 수 없습니다: ' +
+          escapeHtml(err.message) + "</li>";
+      });
+  }
+
+  commentForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var nick = commentNick.value.trim();
+    var msg = commentMsg.value.trim();
+
+    if (!nick || !msg) {
+      setStatus("닉네임과 내용을 모두 입력해 주세요.", true);
+      return;
+    }
+
+    commentSubmit.disabled = true;
+    setStatus("등록 중...", false);
+
+    fetch(API_BASE + "/api/comments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nickname: nick, message: msg }),
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        commentSubmit.disabled = false;
+        if (!data.ok) {
+          setStatus("등록 실패: " + (data.error || "알 수 없는 오류"), true);
+          return;
+        }
+        commentMsg.value = "";
+        setStatus("댓글이 등록되었습니다. 감사합니다! 🎬", false);
+        loadComments();
+      })
+      .catch(function (err) {
+        commentSubmit.disabled = false;
+        setStatus("서버에 연결할 수 없습니다: " + err.message, true);
+      });
+  });
+
+  if (commentForm) {
+    loadComments();
+  }
 })();

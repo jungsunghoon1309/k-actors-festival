@@ -124,8 +124,8 @@ app.post("/api/comments", async (req, res) => {
   }
 });
 
-/* ===== 정적 사이트 서빙 (루트의 index.html 등) ===== */
-const publicDir = path.join(__dirname, "..");
+/* ===== 정적 사이트 서빙 (같은 폴더의 index.html 등) ===== */
+const publicDir = __dirname;
 app.use(express.static(publicDir, { extensions: ["html"] }));
 
 /* SPA가 아니므로 404는 기본 처리 */
